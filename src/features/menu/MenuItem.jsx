@@ -1,8 +1,33 @@
 import { formatCurrency } from "../../utils/helpers";
-import PropTypes from "prop-types";
 import Button from "../../ui/Button";
+import UpdateItemQuantity from "../cart/UpdateItemQuantity";
+import { useDispatch, useSelector } from "react-redux";
+import { addItem, getCurrentQuantityById } from "../cart/cartSlice";
+import DeleteItem from "../cart/DeleteItem";
 function MenuItem({ pizza }) {
-  const { name, unitPrice, ingredients, soldOut, imageUrl } = pizza;
+  const {
+    id: pizzaId,
+    name,
+    unitPrice,
+    ingredients,
+    soldOut,
+    imageUrl,
+  } = pizza;
+  const dispatch = useDispatch();
+
+  const currentQuantity = useSelector(getCurrentQuantityById(pizzaId));
+  const isInCart = currentQuantity > 0;
+  const handleAddToCart = (e) => {
+    dispatch(
+      addItem({
+        pizzaId,
+        name,
+        quantity: 1,
+        unitPrice,
+        totalPrice: unitPrice,
+      }),
+    );
+  };
 
   return (
     <li className="flex gap-4 py-2">
@@ -24,22 +49,26 @@ function MenuItem({ pizza }) {
               Sold out
             </p>
           )}
-          <Button type="small">Add to cart</Button>
+
+          {isInCart && (
+            <div className="flex items-center gap-3 sm:gap-8">
+              <UpdateItemQuantity
+                pizzaId={pizzaId}
+                currentQuantity={currentQuantity}
+              />
+              <DeleteItem pizzaId={pizzaId} />
+            </div>
+          )}
+
+          {!soldOut && !isInCart && (
+            <Button type="small" onClick={handleAddToCart}>
+              Add to cart
+            </Button>
+          )}
         </div>
       </div>
     </li>
   );
 }
-
-MenuItem.propTypes = {
-  pizza: PropTypes.shape({
-    id: PropTypes.number.isRequired,
-    name: PropTypes.string.isRequired,
-    unitPrice: PropTypes.number.isRequired,
-    ingredients: PropTypes.arrayOf(PropTypes.string).isRequired,
-    soldOut: PropTypes.bool.isRequired,
-    imageUrl: PropTypes.string.isRequired,
-  }).isRequired,
-};
 
 export default MenuItem;
